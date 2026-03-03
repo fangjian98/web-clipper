@@ -1,0 +1,110 @@
+@import 'tdesign-react/es/style/index.css';
+
+:root {
+  /* 白色主题 + 醒目点缀色 */
+  --primary-color: #6366F1;        /* 紫色主色 */
+  --primary-hover: #4F46E5;
+  --primary-light: #EEF2FF;
+  --accent-color: #F59E0B;        /* 橙色点缀 */
+  --accent-hover: #D97706;
+  --secondary-color: #F8FAFC;
+  --bg-color: #FFFFFF;
+  --card-bg: #FFFFFF;
+  --surface-bg: #F8FAFC;
+  --text-primary: #1E293B;
+  --text-secondary: #64748B;
+  --text-muted: #94A3B8;
+  --border-color: #E2E8F0;
+  --success-color: #10B981;
+  --error-color: #EF4444;
+  --warning-color: #F59E0B;
+  
+  --font-main: "Inter", "Noto Sans SC", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-code: "JetBrains Mono", "Fira Code", monospace;
+  
+  --radius-xl: 20px;
+  --radius-lg: 14px;
+  --radius-md: 10px;
+  --radius-sm: 8px;
+  
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --shadow-xl: 0 20px 50px rgba(99, 102, 241, 0.15);
+  
+  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: var(--font-main);
+  background: var(--bg-color);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 背景装饰 */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(ellipse 100% 60% at 50% -10%, rgba(99, 102, 241, 0.06), transparent 50%),
+    radial-gradient(ellipse 80% 40% at 100% 0%, rgba(245, 158, 11, 0.04), transparent 40%),
+    radial-gradient(ellipse 60% 30% at 0% 100%, rgba(99, 102, 241, 0.04), transparent 40%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* 滚动条 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* TDesign 覆盖 */
+.t-input {
+  --td-input-bg-color: var(--surface-bg) !important;
+  --td-input-border-color: var(--border-color) !important;
+  --td-input-text-color: var(--text-primary) !important;
+  --td-input-placeholder-color: var(--text-muted) !important;
+}
+
+.t-button--primary {
+  --td-button-primary-bg-color: var(--primary-color) !important;
+  --td-button-primary-hover-bg-color: var(--primary-hover) !important;
+}

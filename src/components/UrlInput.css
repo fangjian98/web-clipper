@@ -1,0 +1,70 @@
+.url-input-section {
+  padding: 0 32px;
+  margin-bottom: 40px;
+}
+
+.input-wrapper {
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--card-bg);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: 10px 10px 10px 20px;
+  box-shadow: var(--shadow-lg);
+  transition: var(--transition);
+}
+
+.input-wrapper:focus-within {
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-xl);
+}
+
+.input-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.url-input-field {
+  flex: 1;
+  background: transparent !important;
+}
+
+.url-input-field .t-input__inner {
+  background: transparent !important;
+  font-size: 16px;
+}
+
+.submit-btn {
+  border-radius: var(--radius-lg) !important;
+  padding: 0 28px !important;
+  height: 44px !important;
+  font-weight: 600 !important;
+  font-size: 15px !important;
+}
+
+@media (max-width: 768px) {
+  .url-input-section {
+    padding: 0 20px;
+  }
+  
+  .input-wrapper {
+    flex-direction: column;
+    padding: 16px;
+    gap: 12px;
+  }
+  
+  .input-icon {
+    display: none;
+  }
+  
+  .url-input-field {
+    width: 100%;
+  }
+  
+  .submit-btn {
+    width: 100%;
+  }
+}
