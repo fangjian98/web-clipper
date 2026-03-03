@@ -25,16 +25,7 @@ const Header: React.FC<HeaderProps> = ({ showHistory = false }) => {
       <div className="header-content">
         <div className="header-brand" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>
           <div className="logo">
-            <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect width="40" height="40" rx="12" fill="url(#logo-gradient)"/>
-              <path d="M12 12H28M12 20H28M12 28H22" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-              <defs>
-                <linearGradient id="logo-gradient" x1="0" y1="0" x2="40" y2="40">
-                  <stop stopColor="#6366F1"/>
-                  <stop offset="1" stopColor="#8B5CF6"/>
-                </linearGradient>
-              </defs>
-            </svg>
+            <img src="/logo.png" alt="Web Clipper" />
           </div>
           <div className="header-text">
             <h1 className="header-title">Web Clipper</h1>

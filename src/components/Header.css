@@ -22,10 +22,11 @@
   gap: 12px;
 }
 
-.logo svg {
-  width: 44px;
-  height: 44px;
+.logo img {
+  width: 40px;
+  height: 40px;
   display: block;
+  border-radius: 10px;
 }
 
 .header-text {
