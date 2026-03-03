@@ -1,36 +1,34 @@
 # Web Clipper API 接口规范
 
-## 基础信息
+本项目支持两种 API 格式，通过环境变量自动切换。
 
-- **Base URL**: 可配置，默认为 `https://r.jina.ai`
+---
+
+## 方式一：Jina AI 风格（默认）
+
+### 基础信息
+
+- **Base URL**: `https://r.jina.ai`（默认）
 - **请求方式**: GET
 - **返回格式**: Markdown 纯文本
+- **API Key**: 可选
 
-## 接口设计
-
-### 1. 解析网页（主要接口）
+### 接口说明
 
 ```
 GET /{url}
 ```
 
-**请求示例**:
-```
-GET https://your-api.com/https://example.com/article
-```
+将目标 URL 直接拼接在路径后。
 
-或
+### 请求示例
 
-```
-POST /parse
-Content-Type: application/json
-
-{
-  "url": "https://example.com/article"
-}
+```bash
+GET https://r.jina.ai/https://example.com/article
 ```
 
-**响应示例**:
+### 响应示例
+
 ```markdown
 # 文章标题
 
@@ -41,27 +39,37 @@ Content-Type: application/json
 更多内容...
 ```
 
+### 配置方式
+
+无需配置，默认使用此方式。如需添加 API Key：
+
+```bash
+# .env
+VITE_API_KEY=your-jina-api-key
+```
+
 ---
 
-### 2. 推荐接口格式（统一）
+## 方式二：自定义 API（推荐）
 
-我们推荐使用以下更灵活的接口设计：
+### 基础信息
 
-#### 接口A: GET 请求
+- **Base URL**: 自定义（如 `https://your-api.com`）
+- **请求方式**: POST
+- **返回格式**: JSON
+- **API Key**: 支持
 
-```
-GET /extract?url={encoded_url}
-```
-
-**示例**:
-```
-GET /extract?url=https%3A%2F%2Fexample.com%2Farticle
-```
-
-#### 接口B: POST 请求（推荐）
+### 接口说明
 
 ```
 POST /api/parse
+Content-Type: application/json
+```
+
+### 请求示例
+
+```bash
+POST https://your-api.com/api/parse
 Content-Type: application/json
 
 {
@@ -69,7 +77,8 @@ Content-Type: application/json
 }
 ```
 
-**成功响应 (200)**:
+### 成功响应 (200)
+
 ```json
 {
   "success": true,
@@ -82,7 +91,8 @@ Content-Type: application/json
 }
 ```
 
-**错误响应 (4xx/5xx)**:
+### 错误响应 (4xx/5xx)
+
 ```json
 {
   "success": false,
@@ -93,19 +103,25 @@ Content-Type: application/json
 }
 ```
 
----
-
-## 响应字段说明
+### 响应字段说明
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | success | boolean | 是否成功 |
 | data.title | string | 文章标题 |
 | data.content | string | Markdown 格式的文章内容 |
-| data.url | string | 原始URL |
+| data.url | string | 原始 URL |
 | data.createdAt | string | 解析时间 (ISO 8601) |
 | error.code | string | 错误代码 |
 | error.message | string | 错误消息 |
+
+### 配置方式
+
+```bash
+# .env
+VITE_API_BASE_URL=https://your-api.com
+VITE_API_KEY=your-api-key
+```
 
 ---
 
@@ -113,8 +129,8 @@ Content-Type: application/json
 
 | 代码 | HTTP状态码 | 说明 |
 |------|------------|------|
-| INVALID_URL | 400 | URL格式无效 |
-| URL_REQUIRED | 400 | URL为空 |
+| INVALID_URL | 400 | URL 格式无效 |
+| URL_REQUIRED | 400 | URL 为空 |
 | PARSE_ERROR | 500 | 解析失败 |
 | ACCESS_DENIED | 403 | 访问被拒绝（反爬虫） |
 | NOT_FOUND | 404 | 页面不存在 |
@@ -123,49 +139,57 @@ Content-Type: application/json
 
 ---
 
-## 前端配置
+## 调用示例
 
-在 `.env` 文件中配置API地址：
+### cURL
 
+方式一（Jina AI）：
 ```bash
-# API 地址
-VITE_API_BASE_URL=https://your-api.com
+curl https://r.jina.ai/https://example.com/article
+```
 
-# 可选：API Key
-VITE_API_KEY=your-api-key
+方式二（自定义 API）：
+```bash
+curl -X POST https://your-api.com/api/parse \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your-api-key" \
+  -d '{"url":"https://example.com/article"}'
+```
+
+### JavaScript
+
+方式一（Jina AI）：
+```javascript
+const response = await fetch('https://r.jina.ai/https://example.com/article');
+const markdown = await response.text();
+```
+
+方式二（自定义 API）：
+```javascript
+const response = await fetch('https://your-api.com/api/parse', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer your-api-key'
+  },
+  body: JSON.stringify({ url: 'https://example.com/article' })
+});
+
+const result = await response.json();
+
+if (result.success) {
+  console.log('Title:', result.data.title);
+  console.log('Content:', result.data.content);
+} else {
+  console.error('Error:', result.error.message);
+}
 ```
 
 ---
 
-## 完整调用示例
+## 切换逻辑
 
-### JavaScript/Fetch
+项目根据 `VITE_API_BASE_URL` 配置自动选择 API 格式：
 
-```javascript
-async function parseUrl(url) {
-  const response = await fetch('https://your-api.com/api/parse', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ url })
-  });
-
-  const result = await response.json();
-
-  if (result.success) {
-    console.log('Title:', result.data.title);
-    console.log('Content:', result.data.content);
-  } else {
-    console.error('Error:', result.error.message);
-  }
-}
-```
-
-### cURL
-
-```bash
-curl -X POST https://your-api.com/api/parse \
-  -H "Content-Type: application/json" \
-  -d '{"url":"https://example.com/article"}'
-```
+- **未配置** 或 `VITE_API_BASE_URL` 包含 `r.jina.ai` → 使用方式一
+- **已配置** 且不包含 `r.jina.ai` → 使用方式二

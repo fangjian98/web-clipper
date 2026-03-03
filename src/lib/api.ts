@@ -6,6 +6,9 @@ export interface ParseResult {
   url: string;
 }
 
+// 导出parseUrl作为parseUrlToMarkdown的别名
+export const parseUrl = parseUrlToMarkdown;
+
 // API配置
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://r.jina.ai';
 const API_KEY = import.meta.env.VITE_API_KEY || '';

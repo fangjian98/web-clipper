@@ -1,7 +1,13 @@
 import React from 'react';
+import UrlInput from './UrlInput';
 import './HomeContent.css';
 
-const HomeContent: React.FC = () => {
+interface HomeContentProps {
+  onParse: (url: string) => void;
+  loading: boolean;
+}
+
+const HomeContent: React.FC<HomeContentProps> = ({ onParse, loading }) => {
   const platforms = [
     { name: '知乎', icon: 'Zhihu', color: '#0084FF' },
     { name: '微信公众号', icon: 'Wechat', color: '#07C160' },
@@ -25,6 +31,10 @@ const HomeContent: React.FC = () => {
           智能提取网页正文，自动去除广告和无关内容<br/>
           支持复制、编辑、下载，完美保留原文格式
         </p>
+      </div>
+
+      <div className="input-section">
+        <UrlInput onParse={onParse} loading={loading} />
       </div>
 
       <section className="platforms-section">
