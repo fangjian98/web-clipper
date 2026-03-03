@@ -6,7 +6,8 @@
 
 - **绕过反爬虫检测**：集成 `puppeteer-extra-plugin-stealth` 插件，模拟真实用户行为，有效应对知乎、微信等平台的自动化访问限制。
 - **正文智能提取**：使用 Mozilla 的 `Readability` 算法（Firefox 阅读模式同款），自动识别文章标题和正文，过滤导航、广告、侧边栏等无关元素。
-- **高质量 Markdown 转换**：采用 `Turndown` 库，确保转换后的 Markdown 语法规范、排版清晰，并保留图片链接。
+- **批量处理支持**：支持从 `.csv`、`.xls`、`.xlsx` 或 `.txt` 文件中批量导入链接进行自动化处理。
+- **高质量 Markdown 转换**：采用 `Turndown` 库并集成 GFM 插件，支持表格、任务列表等。
 - **环境兼容性**：支持使用系统中已安装的 Chrome 浏览器，避免重复下载庞大的 Chromium。
 
 ## 实现方案
@@ -49,22 +50,26 @@ npm install
 
 ## 使用方法
 
-在终端中执行以下命令，将 `<URL>` 替换为你想要抓取的文章链接：
+在终端中执行以下命令，将 `<Input>` 替换为你想要抓取的**文章链接**或**包含链接的文件路径**：
 
 ```bash
-node clipper.js <URL>
+node clipper.js <Input>
 ```
 
-### 示例
-
-抓取知乎文章：
+### 1. 抓取单个链接
 ```bash
 node clipper.js https://zhuanlan.zhihu.com/p/2011434236989682345
 ```
 
-抓取微信公众号文章：
+### 2. 批量处理文件
+支持 `.csv`、`.xls`、`.xlsx` 和 `.txt` 格式。
+- 对于 CSV/Excel：脚本会读取名为 `url` 的列，如果不存在则读取第一列。
+- 对于 TXT：每行一个 URL。
+
 ```bash
-node clipper.js https://mp.weixin.qq.com/s/W7-olJj_QQdyYix1XP7ZeQ
+node clipper.js links.csv
+node clipper.js list.xlsx
+node clipper.js urls.txt
 ```
 
 执行成功后，Markdown 文件将自动生成在项目根目录下。
