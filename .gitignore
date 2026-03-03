@@ -11,6 +11,7 @@ yarn-error.log*
 Thumbs.db
 
 # Generated Articles
+article/
 *_article_*.md
 
 # Environment

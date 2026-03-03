@@ -52,11 +52,16 @@ async function clip(url, browserInstance = null) {
 
   try {
     if (!browser) {
-      browser = await puppeteer.launch({
-        executablePath: process.env.CHROME_PATH || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+      const launchOptions = {
         headless: true,
         args: ['--no-sandbox', '--disable-setuid-sandbox']
-      });
+      };
+      
+      if (process.env.CHROME_PATH) {
+        launchOptions.executablePath = process.env.CHROME_PATH;
+      }
+
+      browser = await puppeteer.launch(launchOptions);
       closeBrowser = true;
     }
 
@@ -73,7 +78,21 @@ async function clip(url, browserInstance = null) {
 
     console.log('Parsing with Readability...');
     const dom = new JSDOM(html, { url });
-    const reader = new Readability(dom.window.document);
+    const document = dom.window.document;
+
+    // 预处理图片懒加载：将 data-src 等属性还原到 src
+    const images = document.querySelectorAll('img');
+    images.forEach(img => {
+      const realSrc = img.getAttribute('data-src') || 
+                      img.getAttribute('data-actualsrc') || 
+                      img.getAttribute('original-src') ||
+                      img.getAttribute('data-original-src');
+      if (realSrc) {
+        img.setAttribute('src', realSrc);
+      }
+    });
+
+    const reader = new Readability(document);
     const article = reader.parse();
 
     if (!article) {
@@ -96,12 +115,18 @@ async function clip(url, browserInstance = null) {
     }
     const domain = hostname.split('.')[0];
     const fileName = `${domain}_article_${Date.now()}.md`;
-    const filePath = path.join(__dirname, fileName);
+    const outputDir = './article';
+    
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+    }
+    
+    const filePath = path.join(outputDir, fileName);
 
     fs.writeFileSync(filePath, markdown);
-    console.log(`Successfully saved: ${fileName}`);
+    console.log(`Successfully saved to ${filePath}`);
   } catch (error) {
-    console.error(`Error clipping ${url}:`, error.message);
+    console.error(`Error clipping ${url}: ${error.message}`);
   } finally {
     if (closeBrowser && browser) {
       await browser.close();
@@ -131,11 +156,16 @@ async function main() {
       const urls = await getUrlsFromFile(input);
       console.log(`Found ${urls.length} URLs. Starting batch process...`);
 
-      const browser = await puppeteer.launch({
-        executablePath: process.env.CHROME_PATH || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+      const launchOptions = {
         headless: true,
         args: ['--no-sandbox', '--disable-setuid-sandbox']
-      });
+      };
+
+      if (process.env.CHROME_PATH) {
+        launchOptions.executablePath = process.env.CHROME_PATH;
+      }
+
+      const browser = await puppeteer.launch(launchOptions);
 
       for (const url of urls) {
         await clip(url, browser);
@@ -150,3 +180,4 @@ async function main() {
 }
 
 main();
+
