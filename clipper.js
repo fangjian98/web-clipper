@@ -21,7 +21,6 @@ async function getUrlsFromFile(filePath) {
       fs.createReadStream(filePath)
         .pipe(csv())
         .on('data', (row) => {
-          // 假设 CSV 有一个名为 'url' 的列，或者取第一列
           const url = row.url || Object.values(row)[0];
           if (url && url.startsWith('http')) urls.push(url.trim());
         })
@@ -52,41 +51,31 @@ async function clip(url, browserInstance = null) {
 
   try {
     if (!browser) {
-      const launchOptions = {
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-      };
-      
+      const launchOptions = { headless: true };
       if (process.env.CHROME_PATH) {
         launchOptions.executablePath = process.env.CHROME_PATH;
       }
-
       browser = await puppeteer.launch(launchOptions);
       closeBrowser = true;
     }
 
     const page = await browser.newPage();
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
-    await page.setViewport({ width: 1280, height: 800 });
-
     console.log(`Navigating to ${url}...`);
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
+
+    // 等待一小段时间，让可能的动态内容加载
     await new Promise(resolve => setTimeout(resolve, 5000));
 
     const html = await page.content();
     await page.close();
 
-    console.log('Parsing with Readability...');
     const dom = new JSDOM(html, { url });
     const document = dom.window.document;
 
-    // 预处理图片懒加载：将 data-src 等属性还原到 src
+    // 预处理图片懒加载
     const images = document.querySelectorAll('img');
     images.forEach(img => {
-      const realSrc = img.getAttribute('data-src') || 
-                      img.getAttribute('data-actualsrc') || 
-                      img.getAttribute('original-src') ||
-                      img.getAttribute('data-original-src');
+      const realSrc = img.getAttribute('data-src') || img.getAttribute('data-actualsrc') || img.getAttribute('original-src') || img.getAttribute('data-original-src');
       if (realSrc) {
         img.setAttribute('src', realSrc);
       }
@@ -99,32 +88,26 @@ async function clip(url, browserInstance = null) {
       throw new Error(`Could not parse content from ${url}`);
     }
 
-    const turndownService = new TurndownService({
-      headingStyle: 'atx',
-      codeBlockStyle: 'fenced'
-    });
+    const turndownService = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced' });
     turndownService.use(gfm);
 
     console.log('Converting to Markdown...');
     let markdown = `# ${article.title}\n\n${turndownService.turndown(article.content)}`;
 
     const urlObject = new URL(url);
-    let hostname = urlObject.hostname;
-    if (hostname.startsWith('www.')) {
-      hostname = hostname.substring(4);
-    }
+    let hostname = urlObject.hostname.replace('www.', '');
     const domain = hostname.split('.')[0];
     const fileName = `${domain}_article_${Date.now()}.md`;
-    const outputDir = './article';
+    const outputDir = path.join(__dirname, 'article');
     
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
     }
     
     const filePath = path.join(outputDir, fileName);
-
     fs.writeFileSync(filePath, markdown);
-    console.log(`Successfully saved to ${filePath}`);
+    console.log(`Successfully saved to article/${fileName}`);
+
   } catch (error) {
     console.error(`Error clipping ${url}: ${error.message}`);
   } finally {
@@ -137,34 +120,26 @@ async function clip(url, browserInstance = null) {
 async function main() {
   const input = process.argv[2];
   if (!input) {
-    console.log('Usage: node clipper.js <URL or FilePath (.csv, .xls, .xlsx, .txt)>');
+    console.log('Usage: node clipper.js <URL or FilePath>');
     process.exit(1);
   }
 
   if (input.startsWith('http')) {
-    // Single URL
     await clip(input);
   } else {
-    // Batch from file
     try {
       if (!fs.existsSync(input)) {
         console.error(`File not found: ${input}`);
         process.exit(1);
       }
 
-      console.log(`Reading URLs from ${input}...`);
       const urls = await getUrlsFromFile(input);
       console.log(`Found ${urls.length} URLs. Starting batch process...`);
 
-      const launchOptions = {
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-      };
-
+      const launchOptions = { headless: true };
       if (process.env.CHROME_PATH) {
         launchOptions.executablePath = process.env.CHROME_PATH;
       }
-
       const browser = await puppeteer.launch(launchOptions);
 
       for (const url of urls) {
@@ -180,4 +155,3 @@ async function main() {
 }
 
 main();
-
