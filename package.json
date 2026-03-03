@@ -2,8 +2,9 @@
   "name": "web_clipper",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "clipper.js",
   "scripts": {
+    "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -13,8 +14,10 @@
   "dependencies": {
     "@mozilla/readability": "^0.6.0",
     "axios": "^1.13.6",
+    "cors": "^2.8.6",
     "csv-parser": "^3.2.0",
     "dotenv": "^17.3.1",
+    "express": "^5.2.1",
     "jsdom": "^28.1.0",
     "puppeteer": "^24.37.5",
     "puppeteer-extra": "^3.3.6",

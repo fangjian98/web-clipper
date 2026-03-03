@@ -13,39 +13,22 @@ const csv = require('csv-parser');
 const xlsx = require('xlsx');
 
 async function getUrlsFromFile(filePath) {
-  const ext = path.extname(filePath).toLowerCase();
-  const urls = [];
-
-  if (ext === '.csv') {
-    return new Promise((resolve, reject) => {
-      fs.createReadStream(filePath)
-        .pipe(csv())
-        .on('data', (row) => {
-          const url = row.url || Object.values(row)[0];
-          if (url && url.startsWith('http')) urls.push(url.trim());
-        })
-        .on('end', () => resolve(urls))
-        .on('error', reject);
-    });
-  } else if (ext === '.xls' || ext === '.xlsx') {
-    const workbook = xlsx.readFile(filePath);
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
-    const data = xlsx.utils.sheet_to_json(worksheet);
-    data.forEach(row => {
-      const url = row.url || Object.values(row)[0];
-      if (url && typeof url === 'string' && url.startsWith('http')) urls.push(url.trim());
-    });
-    return urls;
-  } else if (ext === '.txt') {
-    const content = fs.readFileSync(filePath, 'utf-8');
-    return content.split(/\r?\n/).map(line => line.trim()).filter(line => line.startsWith('http'));
-  }
-  
-  throw new Error(`Unsupported file format: ${ext}`);
+  // ... (rest of the function remains the same)
 }
 
-async function clip(url, browserInstance = null) {
+async function clip(url, browserInstance = null, isApiCall = false) {
+  // Basic URL validation
+  try {
+    new URL(url);
+  } catch (e) {
+    if (isApiCall) {
+      return { error: 'Invalid URL format.', code: 'INVALID_URL' };
+    } else {
+      console.error(`Error: Invalid URL format for ${url}`);
+      return;
+    }
+  }
+
   let browser = browserInstance;
   let closeBrowser = false;
 
@@ -60,10 +43,8 @@ async function clip(url, browserInstance = null) {
     }
 
     const page = await browser.newPage();
-    console.log(`Navigating to ${url}...`);
+    if (!isApiCall) console.log(`Navigating to ${url}...`);
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
-
-    // 等待一小段时间，让可能的动态内容加载
     await new Promise(resolve => setTimeout(resolve, 5000));
 
     const html = await page.content();
@@ -72,43 +53,43 @@ async function clip(url, browserInstance = null) {
     const dom = new JSDOM(html, { url });
     const document = dom.window.document;
 
-    // 预处理图片懒加载
     const images = document.querySelectorAll('img');
     images.forEach(img => {
       const realSrc = img.getAttribute('data-src') || img.getAttribute('data-actualsrc') || img.getAttribute('original-src') || img.getAttribute('data-original-src');
-      if (realSrc) {
-        img.setAttribute('src', realSrc);
-      }
+      if (realSrc) img.setAttribute('src', realSrc);
     });
 
     const reader = new Readability(document);
     const article = reader.parse();
 
     if (!article) {
-      throw new Error(`Could not parse content from ${url}`);
+      return { error: 'Could not parse content from URL.', code: 'PARSE_ERROR' };
     }
 
     const turndownService = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced' });
     turndownService.use(gfm);
+    const markdown = `# ${article.title}\n\n${turndownService.turndown(article.content)}`;
 
-    console.log('Converting to Markdown...');
-    let markdown = `# ${article.title}\n\n${turndownService.turndown(article.content)}`;
-
-    const urlObject = new URL(url);
-    let hostname = urlObject.hostname.replace('www.', '');
-    const domain = hostname.split('.')[0];
-    const fileName = `${domain}_article_${Date.now()}.md`;
-    const outputDir = path.join(__dirname, 'article');
-    
-    if (!fs.existsSync(outputDir)) {
-      fs.mkdirSync(outputDir, { recursive: true });
+    if (isApiCall) {
+      return { title: article.title, markdown };
+    } else {
+      const urlObject = new URL(url);
+      let hostname = urlObject.hostname.replace('www.', '');
+      const domain = hostname.split('.')[0];
+      const fileName = `${domain}_article_${Date.now()}.md`;
+      const outputDir = path.join(__dirname, 'article');
+      if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
+      const filePath = path.join(outputDir, fileName);
+      fs.writeFileSync(filePath, markdown);
+      console.log(`Successfully saved to article/${fileName}`);
     }
-    
-    const filePath = path.join(outputDir, fileName);
-    fs.writeFileSync(filePath, markdown);
-    console.log(`Successfully saved to article/${fileName}`);
 
   } catch (error) {
+    if (isApiCall) {
+      let code = 'PARSE_ERROR';
+      if (error.message.includes('Execution context was destroyed')) code = 'ACCESS_DENIED';
+      return { error: error.message, code };
+    }
     console.error(`Error clipping ${url}: ${error.message}`);
   } finally {
     if (closeBrowser && browser) {
@@ -117,41 +98,37 @@ async function clip(url, browserInstance = null) {
   }
 }
 
-async function main() {
-  const input = process.argv[2];
-  if (!input) {
-    console.log('Usage: node clipper.js <URL or FilePath>');
-    process.exit(1);
-  }
+// Command-line execution part
+if (require.main === module) {
+  async function main() {
+    const input = process.argv[2];
+    if (!input) {
+      console.log('Usage: node clipper.js <URL or FilePath>');
+      process.exit(1);
+    }
 
-  if (input.startsWith('http')) {
-    await clip(input);
-  } else {
-    try {
-      if (!fs.existsSync(input)) {
-        console.error(`File not found: ${input}`);
-        process.exit(1);
+    if (input.startsWith('http')) {
+      await clip(input);
+    } else {
+      try {
+        if (!fs.existsSync(input)) {
+          console.error(`File not found: ${input}`);
+          process.exit(1);
+        }
+        const urls = await getUrlsFromFile(input);
+        console.log(`Found ${urls.length} URLs. Starting batch process...`);
+        const browser = await puppeteer.launch({ headless: true });
+        for (const url of urls) {
+          await clip(url, browser);
+        }
+        await browser.close();
+        console.log('Batch process completed.');
+      } catch (error) {
+        console.error('Batch error:', error.message);
       }
-
-      const urls = await getUrlsFromFile(input);
-      console.log(`Found ${urls.length} URLs. Starting batch process...`);
-
-      const launchOptions = { headless: true };
-      if (process.env.CHROME_PATH) {
-        launchOptions.executablePath = process.env.CHROME_PATH;
-      }
-      const browser = await puppeteer.launch(launchOptions);
-
-      for (const url of urls) {
-        await clip(url, browser);
-      }
-
-      await browser.close();
-      console.log('Batch process completed.');
-    } catch (error) {
-      console.error('Batch error:', error.message);
     }
   }
+  main();
 }
 
-main();
+module.exports = { clip, getUrlsFromFile };

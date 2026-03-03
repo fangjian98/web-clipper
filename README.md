@@ -48,7 +48,56 @@
 npm install
 ```
 
-## 使用方法
+## API 使用
+
+本项目提供了一个 API 接口，方便第三方服务调用。
+
+### 1. 启动服务器
+
+```bash
+npm start
+```
+服务器默认在 `3000` 端口启动。
+
+### 2. 接口详情
+
+- **Endpoint**: `POST /api/parse`
+- **Content-Type**: `application/json`
+
+**请求体 (Body):**
+```json
+{
+  "url": "<要抓取的文章链接>"
+}
+```
+
+**成功响应 (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "title": "文章标题",
+    "content": "... Markdown 内容 ...",
+    "url": "<原始链接>",
+    "createdAt": "... ISO 8601 时间戳 ..."
+  }
+}
+```
+
+**失败响应 (4xx/5xx):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "详细错误信息"
+  }
+}
+```
+
+---
+
+## 命令行使用
 
 在终端中执行以下命令，将 `<Input>` 替换为你想要抓取的**文章链接**或**包含链接的文件路径**：
 
