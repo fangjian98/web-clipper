@@ -9,16 +9,98 @@ interface HomeContentProps {
 
 const HomeContent: React.FC<HomeContentProps> = ({ onParse, loading }) => {
   const platforms = [
-    { name: '知乎', icon: 'Zhihu', color: '#0084FF' },
-    { name: '微信公众号', icon: 'Wechat', color: '#07C160' },
-    { name: '掘金', icon: 'Juejin', color: '#007ACC' },
-    { name: 'CSDN', icon: 'CSDN', color: '#FC1D20' },
-    { name: 'SegmentFault', icon: 'SF', color: '#000000' },
-    { name: '博客园', icon: 'CNblogs', color: '#2319BC' },
-    { name: '简书', icon: 'Jianshu', color: '#EA6F00' },
-    { name: '思否', icon: 'SegmentFault', color: '#1E93FF' },
-    { name: '小红书', icon: 'Xiaohongshu', color: '#FE2C55' },
-    { name: '今日头条', icon: 'Toutiao', color: '#0057FF' },
+    { 
+      name: '微信公众号', 
+      url: 'https://mp.weixin.qq.com',
+      color: '#07C160',
+      initial: '微',
+    },
+    { 
+      name: 'CSDN', 
+      url: 'https://www.csdn.net',
+      color: '#FC5531',
+      initial: 'C',
+    },
+    { 
+      name: '掘金', 
+      url: 'https://juejin.cn',
+      color: '#1E80FF',
+      initial: '掘',
+    },
+    { 
+      name: '开源中国', 
+      url: 'https://www.oschina.net',
+      color: '#29B6F6',
+      initial: '开源',
+    },
+    { 
+      name: '51CTO博客', 
+      url: 'https://blog.51cto.com',
+      color: '#E74C3C',
+      initial: '51',
+    },
+    { 
+      name: '博客园', 
+      url: 'https://www.cnblogs.com',
+      color: '#2319BC',
+      initial: '博',
+    },
+    { 
+      name: '简书', 
+      url: 'https://www.jianshu.com',
+      color: '#EA6F5A',
+      initial: '简',
+    },
+    { 
+      name: 'SegmentFault', 
+      url: 'https://segmentfault.com',
+      color: '#009A61',
+      initial: 'SF',
+    },
+    { 
+      name: 'InfoQ', 
+      url: 'https://www.infoq.cn',
+      color: '#0084FF',
+      initial: 'IQ',
+    },
+    { 
+      name: '阿里云开发者社区', 
+      url: 'https://developer.aliyun.com',
+      color: '#FF6A00',
+      initial: '阿里',
+    },
+    { 
+      name: '腾讯云开发者社区', 
+      url: 'https://cloud.tencent.com/developer',
+      color: '#00A3FF',
+      initial: '腾讯',
+    },
+    { 
+      name: '百度开发者中心', 
+      url: 'https://developer.baidu.com',
+      color: '#306EFF',
+      initial: '百度',
+    },
+    { 
+      name: '华为开发者社区', 
+      url: 'https://developer.huawei.com',
+      color: '#C7000B',
+      initial: '华为',
+    },
+    { 
+      name: '知乎', 
+      url: 'https://www.zhihu.com',
+      color: '#0084FF',
+      initial: '知',
+      beta: true,
+    },
+    { 
+      name: '其他网站', 
+      url: '#',
+      color: '#6B7280',
+      initial: '其他',
+      beta: true,
+    },
   ];
 
   return (
@@ -40,14 +122,47 @@ const HomeContent: React.FC<HomeContentProps> = ({ onParse, loading }) => {
       <section className="platforms-section">
         <h2 className="section-title">支持的平台</h2>
         <div className="platforms-grid">
-          {platforms.map((platform) => (
-            <div key={platform.name} className="platform-card">
-              <div className="platform-icon" style={{ background: platform.color }}>
-                {platform.name.charAt(0)}
+          {platforms.map((platform) => {
+            const isPlaceholder = platform.url === '#';
+            return isPlaceholder ? (
+              <div 
+                key={platform.name} 
+                className="platform-card"
+                title={platform.name}
+              >
+                <div 
+                  className="platform-icon" 
+                  style={{ background: platform.color }}
+                >
+                  {platform.initial}
+                </div>
+                <span className="platform-name">
+                  {platform.name}
+                  {platform.beta && <span className="beta-badge">Beta</span>}
+                </span>
               </div>
-              <span className="platform-name">{platform.name}</span>
-            </div>
-          ))}
+            ) : (
+              <a 
+                key={platform.name} 
+                className="platform-card"
+                href={platform.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={platform.name}
+              >
+                <div 
+                  className="platform-icon" 
+                  style={{ background: platform.color }}
+                >
+                  {platform.initial}
+                </div>
+                <span className="platform-name">
+                  {platform.name}
+                  {platform.beta && <span className="beta-badge">Beta</span>}
+                </span>
+              </a>
+            );
+          })}
         </div>
       </section>
 

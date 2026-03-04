@@ -59,7 +59,7 @@ async function parseWithCustomApi(url: string): Promise<ParseResult> {
     { url },
     {
       headers,
-      timeout: 30000,
+      timeout: 120000, // 2分钟
     }
   );
 
@@ -105,7 +105,7 @@ async function parseWithJinaStyle(url: string): Promise<ParseResult> {
 
   const response = await axios.get(apiUrl, {
     headers,
-    timeout: 30000,
+    timeout: 120000, // 2分钟
   });
 
   // 检查是否返回错误

@@ -72,6 +72,8 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   transition: var(--transition);
+  text-decoration: none;
+  cursor: pointer;
 }
 
 .platform-card:hover {
@@ -88,7 +90,7 @@
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 700;
 }
 
@@ -96,6 +98,19 @@
   font-size: 13px;
   color: var(--text-secondary);
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.beta-badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+  color: white;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
 }
 
 .home-footer {
