@@ -100,6 +100,105 @@ npm run build
 
 ---
 
+## 部署指南
+
+### 方式一：Docker 部署（推荐）
+
+项目已包含 `Dockerfile` 和 `nginx.conf`，可直接使用 Docker 部署：
+
+```bash
+# 1. 克隆仓库
+git clone <your-repo-url> web-clipper
+cd web-clipper
+
+# 2. 安装依赖
+npm install
+
+# 3. 配置环境变量
+cp .env.example .env
+# 编辑 .env 文件配置 API 地址
+
+# 4. 构建项目
+npm run build
+
+# 5. 构建 Docker 镜像
+docker build -t web-clipper .
+
+# 6. 运行容器
+docker run -d --name web-clipper -p 80:80 --restart=always web-clipper
+```
+
+访问：`http://localhost`
+
+### 方式二：Nginx 部署
+
+```bash
+# 1-4 步同上
+
+# 5. 复制构建产物到 nginx 目录
+sudo cp -r dist/* /var/www/web-clipper/
+
+# 6. 配置 Nginx
+sudo nano /etc/nginx/sites-available/web-clipper
+```
+
+Nginx 配置内容：
+
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
+    root /var/www/web-clipper;
+    index index.html;
+
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+```
+
+```bash
+# 7. 启用配置
+sudo ln -s /etc/nginx/sites-available/web-clipper /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+### 方式三：静态托管平台
+
+**Vercel：**
+
+```bash
+npm i -g vercel
+vercel
+```
+
+**Netlify：**
+
+```bash
+npm i -g netlify-cli
+netlify deploy --prod --dir=dist
+```
+
+**GitHub Pages：**
+
+```bash
+# 安装 gh-pages
+npm install --save-dev gh-pages
+
+# 在 package.json 中添加
+# "homepage": "https://your-username.github.io/web-clipper"
+# "scripts": { "deploy": "gh-pages -d dist" }
+
+npm run build
+npm run deploy
+```
+
+---
+
 ## API 接口
 
 项目支持两种 API 格式，通过环境变量自动切换。
