@@ -34,7 +34,10 @@ async function clip(url, browserInstance = null, isApiCall = false) {
 
   try {
     if (!browser) {
-      const launchOptions = { headless: true };
+      const launchOptions = { 
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      };
       if (process.env.CHROME_PATH) {
         launchOptions.executablePath = process.env.CHROME_PATH;
       }
@@ -117,7 +120,11 @@ if (require.main === module) {
         }
         const urls = await getUrlsFromFile(input);
         console.log(`Found ${urls.length} URLs. Starting batch process...`);
-        const browser = await puppeteer.launch({ headless: true });
+        const browser = await puppeteer.launch({ 
+          headless: true,
+          args: ['--no-sandbox', '--disable-setuid-sandbox'],
+          executablePath: process.env.CHROME_PATH 
+        });
         for (const url of urls) {
           await clip(url, browser);
         }

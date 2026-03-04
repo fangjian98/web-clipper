@@ -59,6 +59,110 @@ npm start
 ```
 服务器默认在 `3000` 端口启动。
 
+## Docker 部署
+
+### 1. 服务器要求
+
+- Docker 已安装
+- 端口 8081 可用（或自定义端口）
+
+### 2. 部署命令
+
+```bash
+# 拉取代码
+git clone <your-repo-url> web_clipper
+cd web_clipper
+
+# 构建镜像
+docker build -t web-clipper-api .
+
+# 运行容器（后台运行，自动重启）
+docker run -d \
+  --name web-clipper-api \
+  -p 8081:3000 \
+  --restart unless-stopped \
+  web-clipper-api
+```
+
+### 3. 验证部署
+
+```bash
+# 检查容器状态
+docker ps | grep web-clipper-api
+
+# 测试 API
+curl -X POST http://localhost:8081/api/parse \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com"}'
+```
+
+### 4. 常用运维命令
+
+```bash
+# 查看日志
+docker logs web-clipper-api
+
+# 查看实时日志
+docker logs -f web-clipper-api
+
+# 重启服务
+docker restart web-clipper-api
+
+# 停止服务
+docker stop web-clipper-api
+
+# 删除容器
+docker rm web-clipper-api
+
+# 删除镜像
+docker rmi web-clipper-api
+```
+
+### 5. 更新部署
+
+```bash
+# 拉取最新代码
+git pull
+
+# 重新构建并部署
+docker build -t web-clipper-api .
+docker stop web-clipper-api
+docker rm web-clipper-api
+docker run -d \
+  --name web-clipper-api \
+  -p 8081:3000 \
+  --restart unless-stopped \
+  web-clipper-api
+
+# 清理旧镜像（可选）
+docker image prune -f
+```
+
+### 6. 自定义配置
+
+```bash
+# 使用不同端口（如 3000）
+docker run -d \
+  --name web-clipper-api \
+  -p 3000:3000 \
+  --restart unless-stopped \
+  web-clipper-api
+
+# 使用环境变量
+docker run -d \
+  --name web-clipper-api \
+  -p 8081:3000 \
+  -e PORT=3000 \
+  --restart unless-stopped \
+  web-clipper-api
+```
+
+### 7. 访问地址
+
+部署成功后访问：`http://<服务器IP>:8081/api/parse`
+
+---
+
 ### 2. 接口详情
 
 - **Endpoint**: `POST /api/parse`
