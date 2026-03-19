@@ -13,7 +13,48 @@ const csv = require('csv-parser');
 const xlsx = require('xlsx');
 
 async function getUrlsFromFile(filePath) {
-  // ... (rest of the function remains the same)
+  const ext = path.extname(filePath).toLowerCase();
+  const urls = [];
+
+  if (ext === '.txt') {
+    const content = fs.readFileSync(filePath, 'utf-8');
+    const lines = content.split(/\r?\n/);
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed && trimmed.startsWith('http')) {
+        urls.push(trimmed);
+      }
+    }
+  } else if (ext === '.csv') {
+    return new Promise((resolve, reject) => {
+      fs.createReadStream(filePath)
+        .pipe(csv())
+        .on('data', (row) => {
+          // Try 'url' column first, then first column
+          const url = row.url || row.URL || Object.values(row)[0];
+          if (url && url.trim().startsWith('http')) {
+            urls.push(url.trim());
+          }
+        })
+        .on('end', () => resolve(urls))
+        .on('error', reject);
+    });
+  } else if (ext === '.xls' || ext === '.xlsx') {
+    const workbook = xlsx.readFile(filePath);
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const data = xlsx.utils.sheet_to_json(sheet);
+    for (const row of data) {
+      const url = row.url || row.URL || Object.values(row)[0];
+      if (url && url.toString().trim().startsWith('http')) {
+        urls.push(url.toString().trim());
+      }
+    }
+  } else {
+    throw new Error(`Unsupported file format: ${ext}`);
+  }
+
+  return urls;
 }
 
 async function clip(url, browserInstance = null, isApiCall = false) {
@@ -120,11 +161,14 @@ if (require.main === module) {
         }
         const urls = await getUrlsFromFile(input);
         console.log(`Found ${urls.length} URLs. Starting batch process...`);
-        const browser = await puppeteer.launch({ 
+        const launchOptions = { 
           headless: true,
-          args: ['--no-sandbox', '--disable-setuid-sandbox'],
-          executablePath: process.env.CHROME_PATH 
-        });
+          args: ['--no-sandbox', '--disable-setuid-sandbox']
+        };
+        if (process.env.CHROME_PATH) {
+          launchOptions.executablePath = process.env.CHROME_PATH;
+        }
+        const browser = await puppeteer.launch(launchOptions);
         for (const url of urls) {
           await clip(url, browser);
         }
